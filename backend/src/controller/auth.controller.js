@@ -4,7 +4,7 @@ import crypto from 'crypto';
 
 import User from '../models/user.model.js';
 
-import { senderVerificationEmail, sendWelcomeEmail, sendPasswordResetEmail } from '../mailtrap/email.js';
+import { senderVerificationEmail, sendWelcomeEmail, sendPasswordResetEmail, sendResetPassword } from '../mailtrap/email.js';
 
 
 const register = async (req, res) => {
@@ -198,11 +198,68 @@ const forgotPassword = async (req, res) => {
     }
 }
 
+const resetPassword = async (req, res) => {
+    try {
+        const { token } = req.params;
+        const { password } = req.body;
+        
+        const user = await User.findOne({
+            resetPasswordToken: token,
+            resetPasswordExpiresAt: { $gt: Date.now() }
+        });
+
+        if (!user) {
+            return res.status(400).json({ message: 'Invalid or expired token' });
+        }
+
+        // update password
+
+        const hashedPassword = await bcrypt.hash(password, 10);
+
+        user.password = hashedPassword;
+        user.resetPasswordToken = undefined;
+        user.resetPasswordExpiresAt = undefined;
+
+        await user.save();
+
+        await sendResetPassword(user.email);
+
+
+        res.status(200).json({ message: 'Password reset successful' }); 
+
+    }
+     catch (err) {
+        console.log(err);
+
+        res.status(500).json({ message: 'Server error' });
+    }
+}
+
+const checkAuth = async (req, res) => {
+    try {
+        const user = await User.findById(req.user_id).select('-password');
+
+        if(!user) {
+            return res.status(404).json({ message: 'User not found' });
+        }
+
+        res.status(200).json({ user , message: 'Authenticated'});
+         
+    } catch (err) {
+        console.log(err);
+
+        res.status(500).json({ message: 'Server error' });
+
+    }
+}
+
 export default {
     register,
     verifyEmail,
     login,
     logout,
-    forgotPassword
+    forgotPassword,
+    resetPassword,
+    checkAuth
 };
 
