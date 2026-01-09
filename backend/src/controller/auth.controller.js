@@ -1,7 +1,10 @@
 import jwt from 'jsonwebtoken';
 import bcrypt from 'bcryptjs';
+import crypto from 'crypto';
+
 import User from '../models/user.model.js';
-import { senderVerificationEmail, sendWelcomeEmail } from '../mailtrap/email.js';
+
+import { senderVerificationEmail, sendWelcomeEmail, sendPasswordResetEmail } from '../mailtrap/email.js';
 
 
 const register = async (req, res) => {
@@ -64,7 +67,7 @@ const register = async (req, res) => {
         console.log(error);
     }
 
-}
+};
 
 const verifyEmail = async (req, res) => {
     const { code } = req.body;
@@ -106,48 +109,100 @@ const verifyEmail = async (req, res) => {
         });
     }
 
-}
-
+};
 
 const login = async (req, res) => {
     // Login logic here
+    const { email, password } = req.body;
+
     try {
-        const { email, password } = req.body;
         const user = await User.findOne({ email });
+
         if (!user) {
-            return res.status(401).json({ message: 'Invalid credentials' });
+            return res.status(401).json({
+                success: false,
+                message: 'Invalid credentials'
+            });
         }
+
         const isPasswordValid = await bcrypt.compare(password, user.password);
+
         if (!isPasswordValid) {
-            return res.status(401).json({ message: 'Invalid credentials' });
+            return res.status(401).json({
+                message: 'Invalid credentials'
+            });
         }
+
         const token = jwt.sign({ userId: user._id }, process.env.JWT_SECRET, { expiresIn: '1h' });
+
+        user.lastLogin = Date.now();
+        await user.save();
+
         res.cookie('token', token, {
             httpOnly: true,
             secure: true,
             sameSite: 'Strict',
             maxAge: 7 * 24 * 60 * 60 * 1000 // 7 days
         })
+
         res.status(200).json({
             message: 'Login successful',
             token,
-            user: { id: user._id, username: user.username, email: user.email }
+            user: {
+                ...user._doc,
+                password: undefined,
+            }
         });
-    } catch (error) {
+    }
+    catch (error) {
+        console.log(error)
         res.status(500).json({ message: 'Server error' });
     }
-}
+};
 
 const logout = (req, res) => {
     res.clearCookie('token');
     // Logout logic here (if using sessions or token blacklisting)
     res.status(200).json({ message: 'Logout successful' });
+};
+
+const forgotPassword = async (req, res) => {
+    const { email } = req.body;
+
+    try {
+        const user = await User.findOne({ email });
+
+        if (!user) {
+            return res.status(404).json({ message: 'User not found' });
+        }
+
+        const resetToken = crypto.randomBytes(20).toString('hex');
+        const resetTokenExpiresAt = Date.now() + 3600000; // 1 hour
+
+        user.resetPasswordToken = resetToken;
+        user.resetPasswordExpiresAt = resetTokenExpiresAt;
+
+        await user.save();
+
+        // send email
+
+        await sendPasswordResetEmail(user.email, 
+        `${process.env.CLIENT_URL}/reset-password/${resetToken}`)
+
+        res.status(200).json({ message: 'Password reset email sent' });
+
+    } catch (err) {
+        console.log(err);
+
+        res.status(500).json({ message: 'Server error' });
+    }
 }
 
 export default {
     register,
     verifyEmail,
     login,
-    logout
+    logout,
+    forgotPassword
 };
 
