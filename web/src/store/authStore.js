@@ -3,6 +3,8 @@ import axios from 'axios';
 
 const API_URL = "http://localhost:3000/api/auth"
 
+axios.defaults.withCredentials = true;
+
 export const useAuthStore = create((set) => ({
     user: null,
     isAuthenticated: false,
@@ -10,10 +12,11 @@ export const useAuthStore = create((set) => ({
     isLoading: false,
     isCheckingAuth: true,
 
-    signup: async (email, passwor, name) => {
-        set({ isLoading: true })
+    signup: async (email, password, name) => {
+        set({ isLoading: true , error: null})
         try {
-            const response = await axios.post(`${API_URL}/signup`, { email, password, name })
+            const response = await axios.post(`${API_URL}/signup`, 
+                { email, password, name })
             
             set({ 
                 user: response.data.user,
@@ -26,7 +29,21 @@ export const useAuthStore = create((set) => ({
             error: err.response.data.message, isLoading: false 
             
         });
-        throw error;  
+        throw err;  
+        }
+    },
+
+    verifyEmail: async (code) => {
+        set({ isLoading: true, error: null })
+        try {
+            const response = await axios.post(`${API_URL}/verify-email`, { code });
+
+            set({ user: response.data.user, isAuthenticated: true, isLoading: false});
+
+            return response.data;
+        } catch (err) {
+            set({ error: err.response.data.message, isLoading: false });
+            throw err;
         }
     }
 }))

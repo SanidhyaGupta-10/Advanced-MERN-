@@ -15,8 +15,14 @@ const register = async (req, res) => {
             return res.status(400).json({ message: 'All fields are required' });
         }
 
-        // Check if user already exists
+        // Check email format
+        if (!email.includes('@') || !email.includes('.')) {
+            return res.status(400).json({ message: 'Please enter a valid email address' });
+        }
+
         const existingUser = await User.findOne({ email });
+
+
         if (existingUser) {
             return res.status(400).json({ message: 'User already exists' });
         }
@@ -186,8 +192,8 @@ const forgotPassword = async (req, res) => {
 
         // send email
 
-        await sendPasswordResetEmail(user.email, 
-        `${process.env.CLIENT_URL}/reset-password/${resetToken}`)
+        await sendPasswordResetEmail(user.email,
+            `${process.env.CLIENT_URL}/reset-password/${resetToken}`)
 
         res.status(200).json({ message: 'Password reset email sent' });
 
@@ -202,7 +208,7 @@ const resetPassword = async (req, res) => {
     try {
         const { token } = req.params;
         const { password } = req.body;
-        
+
         const user = await User.findOne({
             resetPasswordToken: token,
             resetPasswordExpiresAt: { $gt: Date.now() }
@@ -225,10 +231,10 @@ const resetPassword = async (req, res) => {
         await sendResetPassword(user.email);
 
 
-        res.status(200).json({ message: 'Password reset successful' }); 
+        res.status(200).json({ message: 'Password reset successful' });
 
     }
-     catch (err) {
+    catch (err) {
         console.log(err);
 
         res.status(500).json({ message: 'Server error' });
@@ -239,12 +245,12 @@ const checkAuth = async (req, res) => {
     try {
         const user = await User.findById(req.user_id).select('-password');
 
-        if(!user) {
+        if (!user) {
             return res.status(404).json({ message: 'User not found' });
         }
 
-        res.status(200).json({ user , message: 'Authenticated'});
-         
+        res.status(200).json({ user, message: 'Authenticated' });
+
     } catch (err) {
         console.log(err);
 

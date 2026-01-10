@@ -4,12 +4,12 @@ import { VERIFICATION_EMAIL_TEMPLATE, PASSWORD_RESET_REQUEST_TEMPLATE, PASSWORD_
 
 export const senderVerificationEmail = async (email, verificationToken) => {
 
-    const recipient = { email: email }
+     const recipient = { email: email }
 
     try {
         const res = await mailtrapClient.send({
             from: sender,
-            to: [recipient],
+            to:[recipient],
             subject: "Please verify your email",
             html: VERIFICATION_EMAIL_TEMPLATE.replace("{verificationCode}", verificationToken),
             category: "Email Verification",
@@ -24,8 +24,7 @@ export const senderVerificationEmail = async (email, verificationToken) => {
 };
 
 export const sendWelcomeEmail = async (email, name) => {
-    const recipient = { email: email };
-
+    const recipient = { email: email }
     try {
         await mailtrapClient.send({
             from: sender,
@@ -47,8 +46,7 @@ export const sendWelcomeEmail = async (email, name) => {
 }
 
 export const sendPasswordResetEmail = async (email, resetURL) => {
-    const recipient = { email: email };
-
+    const recipient = { email: email }
     try {
         const res = await mailtrapClient.send({
             from: sender,
@@ -65,10 +63,8 @@ export const sendPasswordResetEmail = async (email, resetURL) => {
 }
 
 export const sendResetPassword = async (email) => {
-    const recipient = { email: email };
-
+    const recipient = { email: email }
     try {
-
         const res = await mailtrapClient.send({
             from: sender,
             to: [recipient],
