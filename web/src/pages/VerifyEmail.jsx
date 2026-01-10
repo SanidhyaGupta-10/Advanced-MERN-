@@ -111,7 +111,7 @@ const VerifyEmail = () => {
                             type="submit"
                             disabled={isLoading}
                         >
-                            {isLoading ? <Loader className="w-6 h-6 mx-auto animate-spin" /> : "Verify Email"}
+                            {isLoading ? "Verifying..." : "Verify Email"}
                         </motion.button>
                     </form>
 

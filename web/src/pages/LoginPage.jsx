@@ -3,15 +3,19 @@ import { useState } from "react"
 import { Link } from 'react-router-dom'
 import { Mail, Loader, Lock } from "lucide-react"
 import Input from "../components/Input"
+import { useAuthStore } from "../store/authStore"
 
 
 const LoginPage = () => {
   const [email, setEmail] = useState("")
   const [password, setPassword] = useState("")
-  const isLoading = false;
+  
+  const { login, error, isLoading } = useAuthStore()
 
-  const handleLogin = (e) => {
+
+  const handleLogin = async (e) => {
     e.preventDefault()
+      await login(email, password);
   }
 
 
@@ -55,6 +59,8 @@ const LoginPage = () => {
               Forgot Password?
             </Link>
           </div>
+
+          {error && <p className="text-red-500 font-semibold mt-2">{error}</p>}
 
 
           <motion.button
