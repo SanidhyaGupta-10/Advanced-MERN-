@@ -5,16 +5,29 @@ import { Link } from 'react-router-dom'
 import { Mail, User, Lock } from "lucide-react"
 import { useState } from "react"
 import PasswordStrengthMeter from '../components/PasswordStrengthMeter'
+import { useAuthStore } from "../store/authStore"
+import { useNavigate } from "react-router-dom"
 
 
 const SignUpPage = () => {
   const [name, setName] = useState("")
   const [email, setEmail] = useState("")
   const [password, setPassword] = useState("")
+  
+  const { signup, error, isLoading } = useAuthStore()
+  const navigate = useNavigate()
 
 
-  const handleSignUp = (e) => {
+  const handleSignUp = async (e) => {
     e.preventDefault()
+
+    try{
+      await signup(name, email, password);
+      navigate('/verify-email');
+
+    } catch (err){
+      console.log(err)
+    }
 
   }
 

@@ -8,6 +8,7 @@ import Input from "../components/Input"
 const LoginPage = () => {
   const [email, setEmail] = useState("")
   const [password, setPassword] = useState("")
+  const isLoading = false;
 
   const handleLogin = (e) => {
     e.preventDefault()
@@ -62,8 +63,9 @@ const LoginPage = () => {
             whileHover={{ scale: 1.02 }}
             whileTap={{ scale: 0.98 }}
             type="submit"
+            disabled={isLoading}
           >
-            Login
+            {isLoading ? <Loader  className="w-6 h-6 mx-auto animate-spin"/> : "Login"}
           </motion.button>
         </form>
       </div>
